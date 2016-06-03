@@ -1,0 +1,53 @@
+<rbroker-root>
+  <samplebroker>
+    <core>
+      <powerTacBroker>
+        <!-- interactive mode -->
+        <interactive>true</interactive>
+      </powerTacBroker>
+
+      <brokerMessageReceiver>
+        <!-- pass raw XML -->
+        <rawXml>true</rawXml>
+
+	<!-- message types passed to external code without translation -->
+	<rawMsgTypes>
+          <!--  admin messages -->
+          broker-accept, sim-start, sim-end, ts-done,
+
+	  <!-- bootstrap data -->
+	  competition, cust-info, properties,
+	  customer-bootstrap-data, market-bootstrap-data,
+
+	  <!-- accounting -->
+	  bank-tx, cash,
+
+	  <!-- market data -->
+	  market-tx, order-status, trade, market-posn,
+	  orderbook, orderbook-bid,
+
+	  <!-- tariff data -->
+	  tariff-spec, rate, regulation-rate, tariff-status,
+	  tariff-tx, tariff-rev,
+
+	  <!-- DU data -->
+	  distribution-report, capacity-tx, distribution-tx,
+
+	  <!-- balancing data -->
+	  balance-tx, balance-report, balancing-control,
+
+	  <!-- weather -->
+	  weather-report, weather-forecast, weather-prediction
+	</rawMsgTypes>
+
+	<!-- message types that are also handled by the core -->
+	<cookedMsgTypes>
+	  competition, broker-accept,
+	  timeslot-update, ts-done,
+          sim-pause, sim-resume,
+	  sim-start, sim-end
+	</cookedMsgTypes>
+      </brokerMessageReceiver>
+    </core>
+  </samplebroker>
+</rbroker-root>
