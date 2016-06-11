@@ -25,7 +25,11 @@ import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.powertac.common.msg.PauseRelease;
+import org.powertac.common.msg.PauseRequest;
+import org.powertac.common.msg.TimeslotUpdate;
 import org.powertac.samplebroker.core.MessageDispatcher;
+import org.powertac.samplebroker.interfaces.Activatable;
 import org.powertac.samplebroker.interfaces.BrokerContext;
 import org.powertac.samplebroker.interfaces.Initializable;
 import org.powertac.samplebroker.interfaces.IpcAdapter;
@@ -36,7 +40,8 @@ import org.springframework.stereotype.Service;
  * @author John Collins
  */
 @Service // forces Spring to create a singleton instance at startup
-public class CharStreamAdapter implements IpcAdapter, Initializable
+public class CharStreamAdapter
+implements IpcAdapter, Initializable, Activatable
 {
   static private Logger log = LogManager.getLogger(CharStreamAdapter.class);
 
@@ -45,7 +50,9 @@ public class CharStreamAdapter implements IpcAdapter, Initializable
 
   private InputStream inputStream;
   private PrintStream outputStream;
-  boolean finished = false;
+  private BrokerContext context;
+  private boolean finished = false;
+  private boolean inputActive = false;
 
   // xml tag recognizer
   private Pattern tagRe = Pattern.compile("<(\\S+)\\s");
@@ -55,6 +62,17 @@ public class CharStreamAdapter implements IpcAdapter, Initializable
   {
     inputStream = System.in;
     outputStream = System.out;
+    context = broker;
+  }
+
+  // Start the message importer on first activation
+  @Override
+  public void activate (int timeslot)
+  {
+    if (!inputActive) {
+      startMessageImport();
+      inputActive = true;
+    }
   }
 
   /**
@@ -82,6 +100,7 @@ public class CharStreamAdapter implements IpcAdapter, Initializable
     catch (InterruptedException ie) {
       log.warn("interrupted", ie);
     }
+    System.exit(0);
   }
 
   private synchronized void finish ()
@@ -110,9 +129,14 @@ public class CharStreamAdapter implements IpcAdapter, Initializable
       String tag = null;
       while (!isFinished()) {
         try {
+          log.info("waiting for input");
           String line = input.readLine();
+          log.info("input:{}", line);
           if (line.equals("quit")) {
             finish();
+          }
+          else if (line.equals("continue")) {
+            context.sendMessage(new PauseRelease(context.getBroker()));
           }
           else {
             if (null == tag) {
@@ -122,7 +146,7 @@ public class CharStreamAdapter implements IpcAdapter, Initializable
                 dispatcher.sendRawMessage(line);
               }
               else {
-                // start of otential multi-line form
+                // start of potential multi-line form
                 Matcher m = tagRe.matcher(line);
                 if (m.lookingAt()) {
                   // capture the end-of-form string
@@ -162,7 +186,22 @@ public class CharStreamAdapter implements IpcAdapter, Initializable
           log.error(e.getMessage());
         }
       }
+      try {
+        input.close();
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
     }
+  }
+
+  /**
+   * Handles a TimeslotUpdate message by issuing a PauseRequest.
+   */
+  public synchronized void handleMessage (TimeslotUpdate tu)
+  {
+    log.info("TimeslotUpdate {}", tu.getFirstEnabled() - 1);
+    context.sendMessage(new PauseRequest(context.getBroker()));
   }
 
   // Test support

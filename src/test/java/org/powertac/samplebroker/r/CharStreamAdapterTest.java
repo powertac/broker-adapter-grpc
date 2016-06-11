@@ -100,7 +100,7 @@ public class CharStreamAdapterTest
         new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
     uut.setInputStream(stream);
     // send the stream
-    uut.startMessageImport();
+    uut.activate(0);
     // should be finished
     assertTrue("finished", uut.isFinished());
     // should be one call
