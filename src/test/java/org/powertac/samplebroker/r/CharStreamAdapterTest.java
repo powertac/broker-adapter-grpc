@@ -54,8 +54,8 @@ public class CharStreamAdapterTest
   private Configurator config;
   private TreeMap<String, String> cfgMap;
 
-  private String out;
-  private String in;
+  //private String out;
+  //private String in;
 
   @Before
   public void setUp () throws Exception

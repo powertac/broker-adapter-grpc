@@ -85,6 +85,7 @@ implements IpcAdapter, Initializable, Activatable
     else {
       // open input file
       try {
+        log.info("Reading input from {}", inputFilename);
         inputStream = new FileInputStream(inputFilename);
       }
       catch (FileNotFoundException e) {
@@ -99,6 +100,7 @@ implements IpcAdapter, Initializable, Activatable
     else {
       // open output file
       try {
+        log.info("Writing output to {}", outputFilename);
         outputStream =
             new PrintStream(new FileOutputStream(outputFilename), true);
       }
