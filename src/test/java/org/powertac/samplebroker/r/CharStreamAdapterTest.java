@@ -24,12 +24,16 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.powertac.common.config.Configurator;
+import org.powertac.samplebroker.core.BrokerPropertiesService;
 import org.powertac.samplebroker.core.MessageDispatcher;
+import org.powertac.samplebroker.interfaces.BrokerContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.mockito.Matchers.anyObject;
@@ -41,12 +45,17 @@ import static org.mockito.Mockito.mock;
  */
 public class CharStreamAdapterTest
 {
-  MessageDispatcher dispatcher;
-  CharStreamAdapter uut;
-  ArrayList<Object[]> methodArgs;
+  private MessageDispatcher dispatcher;
+  private BrokerContext context;
+  private CharStreamAdapter uut;
+  private ArrayList<Object[]> methodArgs;
 
-  String out;
-  String in;
+  private BrokerPropertiesService bps;
+  private Configurator config;
+  private TreeMap<String, String> cfgMap;
+
+  private String out;
+  private String in;
 
   @Before
   public void setUp () throws Exception
@@ -62,7 +71,23 @@ public class CharStreamAdapterTest
         return null;
       }
     }).when(dispatcher).sendRawMessage(anyObject());
-    uut.initialize(null);
+
+    // Set up brokerProperties mock
+    bps = mock(BrokerPropertiesService.class);
+    ReflectionTestUtils.setField(uut, "propertiesService", bps);
+    cfgMap = new TreeMap<String, String>();
+    config = new Configurator();
+    doAnswer(new Answer<Object>() {
+      @Override
+      public Object answer(InvocationOnMock invocation) {
+        Object[] args = invocation.getArguments();
+        config.configureSingleton(args[0]);
+        return null;
+      }
+    }).when(bps).configureMe(anyObject());
+
+    // Set up broker context
+    context = mock(BrokerContext.class);
   }
 
   /**
@@ -71,6 +96,7 @@ public class CharStreamAdapterTest
   @Test
   public void testExportMessage ()
   {
+    uut.initialize(context);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     PrintStream capture;
     try {
@@ -91,19 +117,19 @@ public class CharStreamAdapterTest
   @Test
   public void testStartMessageImport ()
   {
+    uut.initialize(context);
     assertFalse("not finished", uut.isFinished());
     String msg1 = "<order id=\"200000026\" timeslot=\"362\" mWh=\"37.5198\"/>";
     String msg2 = "<order id=\"200000026\" timeslot=\"362\" mWh=\"37.5198\"> <broker>Sample</broker> </order>";
     String msg3 = "<order id=\"200000026\" timeslot=\"362\" mWh=\"37.5198\">\n <broker>Sample</broker>\n </order>";
-    String data = msg1 + "\n" + msg2 + "\n" + msg3 + "\nquit\n";
+    String data = msg1 + "\n" + msg2 + "\n" + msg3 + "\ncontinue\n";
     InputStream stream =
         new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
     uut.setInputStream(stream);
     // send the stream
     uut.activate(0);
-    // should be finished
-    assertTrue("finished", uut.isFinished());
-    // should be one call
+    uut.waitForImport();
+    // should be three calls on the dispatcher
     assertEquals("three calls", 3, methodArgs.size());
     // msg comes through intact
     assertEquals("correct msg1", msg1, methodArgs.get(0)[0]);

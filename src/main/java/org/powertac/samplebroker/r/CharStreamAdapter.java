@@ -16,6 +16,9 @@
 package org.powertac.samplebroker.r;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -25,9 +28,12 @@ import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.powertac.common.config.ConfigurableValue;
 import org.powertac.common.msg.PauseRelease;
 import org.powertac.common.msg.PauseRequest;
+import org.powertac.common.msg.SimEnd;
 import org.powertac.common.msg.TimeslotUpdate;
+import org.powertac.samplebroker.core.BrokerPropertiesService;
 import org.powertac.samplebroker.core.MessageDispatcher;
 import org.powertac.samplebroker.interfaces.Activatable;
 import org.powertac.samplebroker.interfaces.BrokerContext;
@@ -48,21 +54,59 @@ implements IpcAdapter, Initializable, Activatable
   @Autowired
   private MessageDispatcher dispatcher;
 
+  @Autowired
+  private BrokerPropertiesService propertiesService;
+
+  // input and output streams. If null, use stdin/stdout
+  @ConfigurableValue(valueType = "String",
+      description = "name of input file")
+  private String inputFilename = "";
+
+  @ConfigurableValue(valueType = "String",
+      description = "name of output file")
+  private String outputFilename = "";
+
   private InputStream inputStream;
   private PrintStream outputStream;
   private BrokerContext context;
+  private Importer importer;
   private boolean finished = false;
   private boolean inputActive = false;
-
-  // xml tag recognizer
-  private Pattern tagRe = Pattern.compile("<(\\S+)\\s");
 
   @Override
   public void initialize (BrokerContext broker)
   {
-    inputStream = System.in;
-    outputStream = System.out;
     context = broker;
+    propertiesService.configureMe(this);
+    if (inputFilename.length() == 0) {
+      if (null == inputStream)
+        inputStream = System.in;
+    }
+    else {
+      // open input file
+      try {
+        inputStream = new FileInputStream(inputFilename);
+      }
+      catch (FileNotFoundException e) {
+        log.error("Cannot open input stream {}", inputFilename);
+        log.error(e.toString());
+      }
+    }
+    if (outputFilename.length() == 0) {
+      if (null == outputStream)
+        outputStream = System.out;
+    }
+    else {
+      // open output file
+      try {
+        outputStream =
+            new PrintStream(new FileOutputStream(outputFilename), true);
+      }
+      catch (FileNotFoundException e) {
+        log.error("Cannot open output stream {}", outputFilename);
+        log.error(e.toString());
+      }
+    }
   }
 
   // Start the message importer on first activation
@@ -70,8 +114,8 @@ implements IpcAdapter, Initializable, Activatable
   public void activate (int timeslot)
   {
     if (!inputActive) {
-      startMessageImport();
       inputActive = true;
+      startMessageImport();
     }
   }
 
@@ -92,20 +136,14 @@ implements IpcAdapter, Initializable, Activatable
   @Override
   public void startMessageImport ()
   {
-    Importer imp = new Importer();
-    imp.start();
-    try {
-      imp.join();
-    }
-    catch (InterruptedException ie) {
-      log.warn("interrupted", ie);
-    }
-    System.exit(0);
+    importer = new Importer();
+    importer.start();
   }
 
   private synchronized void finish ()
   {
     finished = true;
+    outputStream.close();
   }
 
   synchronized boolean isFinished ()
@@ -115,6 +153,9 @@ implements IpcAdapter, Initializable, Activatable
 
   class Importer extends Thread
   {
+    // xml tag recognizer
+    private Pattern tagRe = Pattern.compile("<(\\S+)\\s");
+
     public Importer ()
     {
       super();
@@ -131,12 +172,20 @@ implements IpcAdapter, Initializable, Activatable
         try {
           log.info("waiting for input");
           String line = input.readLine();
-          log.info("input:{}", line);
-          if (line.equals("quit")) {
+          if (null == line) {
             finish();
+            continue;
+          }
+          log.info("input:{}", line);
+          if (line.equals("abort")) {
+            log.info("force exit");
+            System.exit(0);
           }
           else if (line.equals("continue")) {
             context.sendMessage(new PauseRelease(context.getBroker()));
+          }
+          else if (line.equals("quit")) {
+            finish();
           }
           else {
             if (null == tag) {
@@ -204,6 +253,15 @@ implements IpcAdapter, Initializable, Activatable
     context.sendMessage(new PauseRequest(context.getBroker()));
   }
 
+  /**
+   * Handles the sim-end message
+   */
+  public synchronized void handleMessage (SimEnd end)
+  {
+    log.info("SimEnd");
+    finish();
+  }
+
   // Test support
   void setInputStream (InputStream stream)
   {
@@ -213,5 +271,15 @@ implements IpcAdapter, Initializable, Activatable
   void setOutputStream (PrintStream stream)
   {
     outputStream = stream;
+  }
+
+  void waitForImport ()
+  {
+    try {
+      importer.join();
+    }
+    catch (InterruptedException e) {
+      log.error("interrupt while waiting for import");
+    }
   }
 }
