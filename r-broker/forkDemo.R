@@ -9,9 +9,10 @@ runBroker <- function(input, output) {
     childIn <- fifo(output, open="r", blocking=TRUE)
     args <- c("exec:exec", " -Dexec.args='", "--prop samplebroker.r.charStreamAdapter.inputFilename:", output,  " --prop samplebroker.r.charStreamAdapter.outputFilename:", input, "'")
     #print(paste(args))
-    writeLines(args, childOut)
-    writeLines(c("<tsx/>", "<ts-done ts=32/>"), childOut)
-   #system2("mvn", args="exec:exec -Dexec.args='--prop samplebroker.r.charStreamAdapter.inputFilename:broker-input --prop samplebroker.r.charStreamAdapter.outputFilename:broker-output'")
+    #writeLines(args, childOut)
+    writeLines(paste(args, collapse=""), childOut)
+    #writeLines(c("<tsx/>", "<ts-done ts=32/>"), childOut)
+    system2("mvn", args=paste(args, collapse=""))
     close(childOut)
     parallel:::mcexit("child exit")
   }
