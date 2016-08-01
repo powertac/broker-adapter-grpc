@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,6 +71,8 @@ implements IpcAdapter, Initializable, Activatable
   private InputStream inputStream;
   private PrintStream outputStream;
   private BrokerContext context;
+  private Exporter exporter;
+  private BlockingQueue<String> exportQueue;
   private Importer importer;
   private boolean finished = false;
   private boolean inputActive = false;
@@ -109,6 +113,10 @@ implements IpcAdapter, Initializable, Activatable
         log.error(e.toString());
       }
     }
+    // set up exporter
+    exportQueue = new ArrayBlockingQueue<String>(1024);
+    exporter = new Exporter();
+    exporter.start();
   }
 
   // Start the message importer on first activation
@@ -122,14 +130,19 @@ implements IpcAdapter, Initializable, Activatable
   }
 
   /**
-   * Exports message by putting it on stdout
+   * Exports message by putting it on the export queue 
    * @see org.powertac.samplebroker.interfaces.IpcAdapter#exportMessage(java.lang.String)
    */
   @Override
   public void exportMessage (String message)
   {
-    outputStream.println(message);
-    outputStream.flush();
+    //log.info("exporting message {}", message);
+    try {
+      exportQueue.put(message);
+    }
+    catch (InterruptedException e) {
+      log.warn("interrupted put on export queue");
+    }
   }
 
   /* (non-Javadoc)
@@ -153,10 +166,34 @@ implements IpcAdapter, Initializable, Activatable
     return finished;
   }
 
+  class Exporter extends Thread
+  {
+    public Exporter ()
+    {
+      super();
+    }
+
+    @Override
+    public void run ()
+    {
+      while (!finished) {
+        String msg;
+        try {
+          msg = exportQueue.take();
+          outputStream.println(msg);
+          outputStream.flush();
+        }
+        catch (InterruptedException e) {
+          log.warn("interrupted take on export queue");
+        }
+      }
+    }
+  }
+
   class Importer extends Thread
   {
     // xml tag recognizer
-    private Pattern tagRe = Pattern.compile("<(\\S+)\\s");
+    private Pattern tagRe = Pattern.compile("<([-_\\w]+)[\\s/>]");
 
     public Importer ()
     {
@@ -184,7 +221,8 @@ implements IpcAdapter, Initializable, Activatable
             System.exit(0);
           }
           else if (line.equals("continue")) {
-            context.sendMessage(new PauseRelease(context.getBroker()));
+            log.info("release");
+            //context.sendMessage(new PauseRelease(context.getBroker()));
           }
           else if (line.equals("quit")) {
             finish();
@@ -252,7 +290,7 @@ implements IpcAdapter, Initializable, Activatable
   public synchronized void handleMessage (TimeslotUpdate tu)
   {
     log.info("TimeslotUpdate {}", tu.getFirstEnabled() - 1);
-    context.sendMessage(new PauseRequest(context.getBroker()));
+    //context.sendMessage(new PauseRequest(context.getBroker()));
   }
 
   /**
