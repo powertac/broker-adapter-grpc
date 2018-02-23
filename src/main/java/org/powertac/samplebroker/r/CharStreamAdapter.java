@@ -31,8 +31,6 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.powertac.common.config.ConfigurableValue;
-import org.powertac.common.msg.PauseRelease;
-import org.powertac.common.msg.PauseRequest;
 import org.powertac.common.msg.SimEnd;
 import org.powertac.common.msg.TimeslotUpdate;
 import org.powertac.samplebroker.core.BrokerPropertiesService;
@@ -123,6 +121,7 @@ implements IpcAdapter, Initializable, Activatable
   @Override
   public void activate (int timeslot)
   {
+    log.info("activate");
     if (!inputActive) {
       inputActive = true;
       startMessageImport();
@@ -136,7 +135,7 @@ implements IpcAdapter, Initializable, Activatable
   @Override
   public void exportMessage (String message)
   {
-    //log.info("exporting message {}", message);
+    log.info("exporting message {}", message);
     try {
       exportQueue.put(message);
     }
@@ -203,6 +202,7 @@ implements IpcAdapter, Initializable, Activatable
     @Override
     public void run ()
     {
+      log.info("importer started");
       BufferedReader input =
           new BufferedReader(new InputStreamReader(inputStream));
       StringBuffer message = new StringBuffer();
@@ -276,6 +276,7 @@ implements IpcAdapter, Initializable, Activatable
         }
       }
       try {
+        log.info("importer finished");
         input.close();
       }
       catch (IOException e) {
