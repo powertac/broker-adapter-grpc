@@ -58,6 +58,11 @@ public class ServerMessageStreamServiceTest {
         smss.exportMessage(testXml);
 
         verify(xso, times(1)).onNext(anyObject());
+
+        ReflectionTestUtils.setField(smss, "toClient", null);
+        smss.registerListener(Booly.newBuilder().build(), xso);
+        smss.exportMessage(testXml);
+        verify(xso, times(2)).onNext(anyObject());
     }
 
     @Test

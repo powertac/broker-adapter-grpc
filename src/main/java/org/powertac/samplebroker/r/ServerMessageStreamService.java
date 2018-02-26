@@ -52,7 +52,7 @@ public class ServerMessageStreamService extends ServerMessagesStreamGrpc.ServerM
     @Override
     public void registerListener(Booly request, StreamObserver<XmlMessage> responseObserver) {
         this.toClientObserver = responseObserver;
-        if (this.toClient.size() > 0) {
+        if (this.toClient != null && this.toClient.size() > 0) {
             this.pushAllToClient(this.toClient);
         }
     }
