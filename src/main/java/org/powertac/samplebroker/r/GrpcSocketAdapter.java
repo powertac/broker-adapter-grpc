@@ -83,6 +83,10 @@ public class GrpcSocketAdapter implements Initializable, Activatable {
                 .build();
     }
 
+    public Integer getPort() {
+        return port;
+    }
+
     public Server getMessageStreamServer() {
         return messageStreamServer;
     }
