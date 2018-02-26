@@ -14,7 +14,7 @@
  *  governing permissions and limitations under the License.
  */
 
-package org.powertac.samplebroker.r;
+package org.powertac.samplebroker.grpc;
 
 import io.grpc.stub.StreamObserver;
 import org.powertac.broker.adapter.grpc.Booly;
@@ -29,38 +29,42 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ControlEventHandlerService extends ControlEventHandlerGrpc.ControlEventHandlerImplBase implements Initializable {
+public class ControlEventHandlerService extends ControlEventHandlerGrpc.ControlEventHandlerImplBase implements Initializable
+{
 
-    @Autowired
-    MessageDispatcher dispatcher;
-    private BrokerContext broker;
+  @Autowired
+  MessageDispatcher dispatcher;
+  private BrokerContext broker;
 
-    /**
-     * takes controlEvents from the client and triggers pause/release with server.
-     * @param request
-     * @param responseObserver
-     */
-    @Override
-    public void submitControlEvent(ControlEvent request, StreamObserver<Booly> responseObserver) {
-        switch (request.getValueValue()) {
-            case 0:
-                //todo, took this from the CharStreamAdapter but idk what it's for tbh
-                break;
-            case 1:
-                PauseRequest pause = new PauseRequest(broker.getBroker());
-                dispatcher.sendMessage(pause);
-                break;
-            case 2:
-                PauseRelease release = new PauseRelease(broker.getBroker());
-                dispatcher.sendMessage(release);
-                break;
-            default:
-                break;
-        }
+  /**
+   * takes controlEvents from the client and triggers pause/release with server.
+   *
+   * @param request
+   * @param responseObserver
+   */
+  @Override
+  public void submitControlEvent(ControlEvent request, StreamObserver<Booly> responseObserver)
+  {
+    switch (request.getValueValue()) {
+      case 0:
+        //todo, took this from the CharStreamAdapter but idk what it's for tbh
+        break;
+      case 1:
+        PauseRequest pause = new PauseRequest(broker.getBroker());
+        dispatcher.sendMessage(pause);
+        break;
+      case 2:
+        PauseRelease release = new PauseRelease(broker.getBroker());
+        dispatcher.sendMessage(release);
+        break;
+      default:
+        break;
     }
+  }
 
-    @Override
-    public void initialize(BrokerContext broker) {
-        this.broker = broker;
-    }
+  @Override
+  public void initialize(BrokerContext broker)
+  {
+    this.broker = broker;
+  }
 }
