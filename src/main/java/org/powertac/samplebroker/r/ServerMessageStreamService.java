@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-@Service
+@Service("SocketAdapter")
 public class ServerMessageStreamService extends ServerMessagesStreamGrpc.ServerMessagesStreamImplBase implements IpcAdapter {
 
     static private Logger log = LogManager.getLogger(CharStreamAdapter.class);

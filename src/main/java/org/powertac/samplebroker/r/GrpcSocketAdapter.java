@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
-@Service("GrpcSocket")
+@Service()
 public class GrpcSocketAdapter implements Initializable, Activatable {
 
     static private Logger log = LogManager.getLogger(CharStreamAdapter.class);

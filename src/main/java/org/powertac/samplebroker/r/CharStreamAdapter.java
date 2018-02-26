@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service;
 /**
  * @author John Collins
  */
-@Service // forces Spring to create a singleton instance at startup
+@Service("CharStreamAdapter") // forces Spring to create a singleton instance at startup
 public class CharStreamAdapter
 implements IpcAdapter, Initializable, Activatable
 {
