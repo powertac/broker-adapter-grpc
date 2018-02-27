@@ -65,7 +65,10 @@ public class GrpcSocketAdapterTest
   @After
   public void tearDown()
   {
-    gsa.getMessageStreamServer().shutdownNow();
+    if(gsa.getMessageStreamServer() != null)
+      {
+        gsa.getMessageStreamServer().shutdownNow();
+      }
   }
 
   @Test
