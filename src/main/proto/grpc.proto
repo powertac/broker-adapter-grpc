@@ -1,5 +1,5 @@
 syntax = "proto3";
-option java_package = "org.powertac.broker.adapter.grpc";
+option java_package = "org.powertac.samplebroker.grpc";
 option java_multiple_files = true;
 
 

@@ -20,8 +20,8 @@ import io.grpc.stub.StreamObserver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.powertac.broker.adapter.grpc.Booly;
-import org.powertac.broker.adapter.grpc.XmlMessage;
+import org.powertac.samplebroker.grpc.Booly;
+import org.powertac.samplebroker.grpc.XmlMessage;
 import org.powertac.samplebroker.core.MessageDispatcher;
 import org.springframework.test.util.ReflectionTestUtils;
 

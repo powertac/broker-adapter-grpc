@@ -17,11 +17,12 @@
 package org.powertac.samplebroker.grpc;
 
 import io.grpc.stub.StreamObserver;
-import org.powertac.broker.adapter.grpc.Booly;
-import org.powertac.broker.adapter.grpc.ControlEvent;
-import org.powertac.broker.adapter.grpc.ControlEventHandlerGrpc;
 import org.powertac.common.msg.PauseRelease;
 import org.powertac.common.msg.PauseRequest;
+import org.powertac.samplebroker.grpc.Booly;
+import org.powertac.samplebroker.grpc.ServerMessagesStreamGrpc;
+import org.powertac.samplebroker.grpc.XmlMessage;
+import org.powertac.samplebroker.core.MessageDispatcher;
 import org.powertac.samplebroker.core.MessageDispatcher;
 import org.powertac.samplebroker.interfaces.BrokerContext;
 import org.powertac.samplebroker.interfaces.Initializable;
