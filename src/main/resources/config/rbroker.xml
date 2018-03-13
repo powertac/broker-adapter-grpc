@@ -9,7 +9,7 @@
 
       <brokerMessageReceiver>
         <!-- pass raw XML -->
-        <rawXml>true</rawXml>
+        <!--<ipcAdapterName>CharStreamAdapter</ipcAdapterName>-->
 
 	<!-- message types passed to external code without translation -->
 	<rawMsgTypes>
