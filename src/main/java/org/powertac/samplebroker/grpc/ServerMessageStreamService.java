@@ -30,8 +30,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
 
-@Service("SocketAdapter")
-public class ServerMessageStreamService extends ServerMessagesStreamGrpc.ServerMessagesStreamImplBase implements IpcAdapter
+@Service()
+public class ServerMessageStreamService extends ServerMessagesStreamGrpc.ServerMessagesStreamImplBase
 {
 
   static private Logger log = LogManager.getLogger(CharStreamAdapter.class);
@@ -112,8 +112,7 @@ public class ServerMessageStreamService extends ServerMessagesStreamGrpc.ServerM
    * Allows the JVM side of the client to open a connection to the server and receive messages while the GRPC endpoint
    * might not yet be connected
    */
-  @Override
-  public void openStreams()
+  public void initQueue()
   {
     this.toClient = new LinkedList<>();
     this.counter = 0;
@@ -124,8 +123,7 @@ public class ServerMessageStreamService extends ServerMessagesStreamGrpc.ServerM
    *
    * @param message to send to broker client
    */
-  @Override
-  public void exportMessage(String message)
+  protected void exportMessage(String message)
   {
     if (toClientObserver == null) {
       toClient.add(message);
@@ -145,9 +143,4 @@ public class ServerMessageStreamService extends ServerMessagesStreamGrpc.ServerM
         .build();
   }
 
-  @Override
-  public void startMessageImport()
-  {
-    //doing nothing, we're running observables no threads
-  }
 }

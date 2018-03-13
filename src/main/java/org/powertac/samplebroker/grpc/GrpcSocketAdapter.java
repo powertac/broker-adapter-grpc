@@ -25,6 +25,7 @@ import org.powertac.samplebroker.core.MessageDispatcher;
 import org.powertac.samplebroker.interfaces.Activatable;
 import org.powertac.samplebroker.interfaces.BrokerContext;
 import org.powertac.samplebroker.interfaces.Initializable;
+import org.powertac.samplebroker.interfaces.IpcAdapter;
 import org.powertac.samplebroker.r.CharStreamAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,8 +34,8 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-@Service()
-public class GrpcSocketAdapter implements Initializable, Activatable
+@Service("GrpcSocketAdapter")
+public class GrpcSocketAdapter implements IpcAdapter, Initializable, Activatable
 {
 
   static private Logger log = LogManager.getLogger(CharStreamAdapter.class);
@@ -139,5 +140,23 @@ public class GrpcSocketAdapter implements Initializable, Activatable
   public Server getMessageStreamServer()
   {
     return messageStreamServer;
+  }
+
+  @Override
+  public void openStreams()
+  {
+    smss.initQueue();
+  }
+
+  @Override
+  public void exportMessage(String message)
+  {
+    smss.exportMessage(message);
+  }
+
+  @Override
+  public void startMessageImport()
+  {
+
   }
 }
