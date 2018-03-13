@@ -16,8 +16,7 @@
 
 package org.powertac.samplebroker.grpc;
 
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.powertac.common.config.ConfigurableValue;
@@ -31,6 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @Service()
 public class GrpcSocketAdapter implements Initializable, Activatable
@@ -56,6 +57,10 @@ public class GrpcSocketAdapter implements Initializable, Activatable
   private Integer port = 1234;
 
   private Server messageStreamServer;
+  private CountDownLatch startSignal = new CountDownLatch(1);
+
+  boolean clientConnected = false;
+
 
   @Override
   public void activate(int timeslot)
@@ -68,24 +73,61 @@ public class GrpcSocketAdapter implements Initializable, Activatable
   {
 
     propertiesService.configureMe(this);
-    messageStreamServer = this.messageStreamServer(port);
+    messageStreamServer = this.messageStreamServerFactory(port);
     try {
       messageStreamServer.start();
       log.info("Listening on port {} for GRPC rpc calls", port);
-      //messageStreamServer.awaitTermination();
+      //messageStreamServerFactory.awaitTermination();
     }
     catch (IOException e) {
       log.error(e.getMessage());
       log.error("GRPC server caused an error");
     }
+
+    //waiting for GRPC client to connect before connecting to the server. This ensures the client is ready to handle the session.
+    try {
+      boolean connected = startSignal.await(30 * 1000L, TimeUnit.MILLISECONDS);
+      if (connected) {
+        log.info("GRPC Client connected. Lock removed");
+      }
+      else {
+        log.error("Client not connected, timing out and exiting");
+        System.exit(1);
+      }
+    }
+    catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
-  private Server messageStreamServer(Integer port)
+  /**
+   * builds a Server object and notifies any waiting lock of a connection
+   *
+   * @param port
+   * @return
+   */
+  private Server messageStreamServerFactory(Integer port)
   {
+    ServerInterceptor interceptor;
+    interceptor = new ServerInterceptor()
+    {
+      @Override
+      public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next)
+      {
+        if (!clientConnected) {
+          clientConnected = true;
+          startSignal.countDown();
+        }
+        return next.startCall(call, headers);
+      }
+    };
+
+
     return ServerBuilder
         .forPort(port)
         .addService(smss)
         .addService(cehs)
+        .intercept(interceptor)
         .build();
   }
 
