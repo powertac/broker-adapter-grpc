@@ -13,8 +13,8 @@
 
 	<!-- message types passed to external code without translation -->
 	<rawMsgTypes>
-          <!--  admin messages -->
-          broker-accept, sim-start, sim-end, ts-done,
+      <!--  admin messages -->
+      broker-accept, sim-start, sim-end, ts-done,
 
 	  <!-- bootstrap data -->
 	  competition, cust-info, properties,
@@ -25,7 +25,7 @@
 
 	  <!-- market data -->
 	  market-tx, order-status, trade, market-posn,
-	  orderbook, orderbook-bid,
+	  orderbook, orderbook-bid, timeslot-update,
 
 	  <!-- tariff data -->
 	  tariff-spec, rate, regulation-rate, tariff-status,
