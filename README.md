@@ -15,7 +15,11 @@ You should see all the incoming xml messages streamed to the R console.
 
 ## Python Example
 
-TODO
+The Python Example connects to the adapter on two channels (send and receive) and sends one order to the server. It's just a raw xml string and nothing fancy. All received xml is output to the console.
+2 things that happen already:
+
+- two async threads and 2 blocking queues for the in/outs
+- handling of `broker-accept` message.
 
 ## General idea
 
