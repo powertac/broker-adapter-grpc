@@ -109,8 +109,8 @@ public class ServerMessageStreamService extends ServerMessagesStreamGrpc.ServerM
   }
 
   /**
-   * Allows the JVM side of the client to open a connection to the server and receive messages while the GRPC endpoint
-   * might not yet be connected
+   * Allows the JVM side of the client to keep the connection to the  server and receive messages while the GRPC endpoint
+   * might not be connected temporarily.
    */
   public void initQueue()
   {

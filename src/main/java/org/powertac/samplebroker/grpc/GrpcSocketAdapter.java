@@ -148,6 +148,10 @@ public class GrpcSocketAdapter implements IpcAdapter, Initializable, Activatable
     smss.initQueue();
   }
 
+  /**
+   * This sends a message to the client (server-->here-->client)
+   * @param message
+   */
   @Override
   public void exportMessage(String message)
   {
