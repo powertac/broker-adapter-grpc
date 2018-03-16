@@ -1,6 +1,7 @@
 # broker-adapter
 Adapter to allow out-of-process broker implementation.
 
+## R Example
 Example: The r-broker directory contains a brief working demo called forkDemo.R. It works within RStudio. Here's the process for running it:
 
 * Create two fifos in the broker-adapter directory. The rest of this assumes you name them broker-input and broker-output
@@ -11,3 +12,24 @@ Example: The r-broker directory contains a brief working demo called forkDemo.R.
 * In RStudio, run the command runBroker("broker-output", "broker-input")
 
 You should see all the incoming xml messages streamed to the R console.
+
+## Python Example
+
+The Python Example connects to the adapter on two channels (send and receive) and sends one order to the server. It's just a raw xml string and nothing fancy. All received xml is output to the console.
+2 things that happen already:
+
+- two async threads and 2 blocking queues for the in/outs
+- handling of `broker-accept` message.
+
+## General idea
+
+You can create any kind of adapter by implementing the `IpcAdapter` interface and passing the Class name of the implementing bean via CLI paramter `--ipc-adapter-name`.
+See the two included adapters (GRPC and CharStream) for details.
+
+There are some caveats though. Some things need to be reimplemented that were previously handled by the already existing Java code. One such example is the handling of the
+
+```
+<broker-accept prefix="2" key="dlop5b" serverTime="1521046957413"/>
+``` 
+
+message which holds the infos about key generation and prefix stuff. The broker needs to prefix its xml with this key and use the prefix (naming mixed up) to calculate the ID for each message.

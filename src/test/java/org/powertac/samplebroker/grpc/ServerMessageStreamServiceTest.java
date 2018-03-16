@@ -20,8 +20,6 @@ import io.grpc.stub.StreamObserver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.powertac.samplebroker.grpc.Booly;
-import org.powertac.samplebroker.grpc.XmlMessage;
 import org.powertac.samplebroker.core.MessageDispatcher;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -50,7 +48,7 @@ public class ServerMessageStreamServiceTest
     md = Mockito.mock(MessageDispatcher.class);
 
     smss = new ServerMessageStreamService();
-    smss.openStreams();
+    smss.initQueue();
   }
 
   @Test

@@ -34,9 +34,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class GrpcSocketAdapterTest
 {
@@ -45,8 +48,9 @@ public class GrpcSocketAdapterTest
   GrpcSocketAdapter gsa;
 
   //all dependencies that we mock away
-  ServerMessageStreamService smss = Mockito.mock(ServerMessageStreamService.class);
-  ControlEventHandlerService cehs = Mockito.mock(ControlEventHandlerService.class);
+  ServerMessageStreamService messageStreamServiceMock = Mockito.mock(ServerMessageStreamService.class);
+  ControlEventHandlerService eventHandlerServiceMock = Mockito.mock(ControlEventHandlerService.class);
+  CountDownLatch countDownLatchMock = Mockito.mock(CountDownLatch.class);
   MessageDispatcher md = Mockito.mock(MessageDispatcher.class);
   BrokerPropertiesService ps = Mockito.mock(BrokerPropertiesService.class);
 
@@ -56,8 +60,8 @@ public class GrpcSocketAdapterTest
   public void setUp()
   {
     gsa = new GrpcSocketAdapter();
-    ReflectionTestUtils.setField(gsa, "smss", smss);
-    ReflectionTestUtils.setField(gsa, "cehs", cehs);
+    ReflectionTestUtils.setField(gsa, "smss", messageStreamServiceMock);
+    ReflectionTestUtils.setField(gsa, "cehs", eventHandlerServiceMock);
     ReflectionTestUtils.setField(gsa, "dispatcher", md);
     ReflectionTestUtils.setField(gsa, "propertiesService", ps);
   }
@@ -74,26 +78,39 @@ public class GrpcSocketAdapterTest
   @Test
   public void initialize()
   {
-    gsa.initialize(null);
-    assertEquals(2, gsa.getMessageStreamServer().getServices().size());
+    try {
+      ReflectionTestUtils.setField(gsa, "startSignal", countDownLatchMock);
+      when(countDownLatchMock.await(anyLong(),any(TimeUnit.class))).thenReturn(true);
+      gsa.initialize(null);
+      assertEquals(2, gsa.getMessageStreamServer().getServices().size());
+      verify(countDownLatchMock, times(1)).await(anyLong(), any(TimeUnit.class));
+    }
+    catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
 
   }
 
   @Test
   public void integration()
   {
-    ServerMessageStreamService realSmss = new ServerMessageStreamService();
-    ReflectionTestUtils.setField(realSmss, "dispatcher", md);
-    ReflectionTestUtils.setField(gsa, "smss", realSmss);
-
-    gsa.initialize(null);
     try {
+      ServerMessageStreamService realSmss = new ServerMessageStreamService();
+      ReflectionTestUtils.setField(realSmss, "dispatcher", md);
+      ReflectionTestUtils.setField(gsa, "smss", realSmss);
+
+      //connecting to server first (it allows a bit of a timeout
       connectToServer();
+      //initialize, which blocks until a connection has arrived
+      gsa.initialize(null);
+
+      lock.await(1000, TimeUnit.MILLISECONDS);
+      verify(md, times(1)).sendRawMessage(anyObject());
     }
-    catch (InterruptedException e) {
+    catch (InterruptedException ignored) {
 
     }
-    verify(md, times(1)).sendRawMessage(anyObject());
   }
 
   private void connectToServer() throws InterruptedException
@@ -104,7 +121,6 @@ public class GrpcSocketAdapterTest
     source.onNext(XmlMessage.newBuilder().setRawMessage(testXml).build());
     source.onCompleted();
 
-    lock.await(1000, TimeUnit.MILLISECONDS);
   }
 
   @Test
