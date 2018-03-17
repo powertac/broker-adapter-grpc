@@ -26,7 +26,6 @@ import org.powertac.samplebroker.interfaces.Activatable;
 import org.powertac.samplebroker.interfaces.BrokerContext;
 import org.powertac.samplebroker.interfaces.Initializable;
 import org.powertac.samplebroker.interfaces.IpcAdapter;
-import org.powertac.samplebroker.r.CharStreamAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class GrpcSocketAdapter implements IpcAdapter, Initializable, Activatable
 {
 
-  static private Logger log = LogManager.getLogger(CharStreamAdapter.class);
+  static private Logger log = LogManager.getLogger(GrpcSocketAdapter.class);
 
   @Autowired
   private MessageDispatcher dispatcher;
