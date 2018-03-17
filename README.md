@@ -32,4 +32,4 @@ There are some caveats though. Some things need to be reimplemented that were pr
 <broker-accept prefix="2" key="dlop5b" serverTime="1521046957413"/>
 ``` 
 
-message which holds the infos about key generation and prefix stuff. The broker needs to prefix its xml with this key and use the prefix (naming mixed up) to calculate the ID for each message.
+message which holds the infos about key generation and prefix stuff. The broker core takes care of prepending the key to outgoing messages, but the implementation needs to use the prefix multiplied by 100000000 to calculate ID values for domain types sent to the server, such as TariffSpecifications and Orders. This is essential; otherwise the server will discard your messages. The serverTime is the time in milliseconds UTC at which the first timeslot starts. This time advances by one timeslot-duration each time the server sends out the TimeslotUpdate message.
