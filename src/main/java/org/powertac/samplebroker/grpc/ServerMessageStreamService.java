@@ -24,7 +24,6 @@ import org.powertac.samplebroker.grpc.ServerMessagesStreamGrpc;
 import org.powertac.samplebroker.grpc.XmlMessage;
 import org.powertac.samplebroker.core.MessageDispatcher;
 import org.powertac.samplebroker.interfaces.IpcAdapter;
-import org.powertac.samplebroker.r.CharStreamAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +33,7 @@ import java.util.LinkedList;
 public class ServerMessageStreamService extends ServerMessagesStreamGrpc.ServerMessagesStreamImplBase
 {
 
-  static private Logger log = LogManager.getLogger(CharStreamAdapter.class);
+  static private Logger log = LogManager.getLogger(ServerMessageStreamService .class);
 
   @Autowired
   private MessageDispatcher dispatcher;
