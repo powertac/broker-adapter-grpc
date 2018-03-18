@@ -13,8 +13,8 @@
 
 	<!-- message types passed to external code without translation -->
 	<rawMsgTypes>
-      <!--  admin messages -->
-      broker-accept, sim-start, sim-end, ts-done,
+        <!--  admin messages -->
+        broker-accept, sim-start, sim-end, ts-done,
 
 	  <!-- bootstrap data -->
 	  competition, cust-info, properties,
