@@ -1,7 +1,5 @@
-# broker-adapter
+# broker-adapter-grpc
 Adapter to allow out-of-process broker implementation.
-## R Example
-See the example in the broker-adapter-fs repo.
 
 ## Python Example
 
