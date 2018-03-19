@@ -1,5 +1,9 @@
 # broker-adapter-grpc
 Adapter to allow out-of-process broker implementation.
+The adapter uses GRPC. For more information check the [project website](http://grpc.io/). It supports many languages,
+among others: Java, Python, C, Node, Go, ...
+
+Generate the stubs for your target language with the `.proto` file and use this as an adapter to the powertac-server. 
 
 ## Python Example
 
@@ -20,4 +24,4 @@ There are some caveats. Some things need to be reimplemented that were previousl
 <broker-accept prefix="2" key="dlop5b" serverTime="1521046957413"/>
 ``` 
 
-message which holds the info about key generation and prefix. The broker core takes care of prepending the key to outgoing messages, but the implementation needs to use the prefix multiplied by 100000000 to calculate ID values for domain types sent to the server, such as TariffSpecifications and Orders. This is essential; otherwise the server will discard your messages. The serverTime is the time in milliseconds UTC at which the first timeslot starts. This time advances by one timeslot-duration each time the server sends out the TimeslotUpdate message.
+message which holds the info about key generation and prefix. The broker core takes care of prepending the key to outgoing messages, but the implementation needs to use the prefix multiplied by 100000000 to calculate ID values for domain types sent to the server, such as TariffSpecifications and Orders. This is essential; otherwise the server will discard your messages. The serverTime is the time in milliseconds UTC at which the first timeslot starts. This time advances by one timeslot-duration each time the server sends out the TimeslotUpdate message. The Python broker example shows how to handle the `broker-accept` messages. 
